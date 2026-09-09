@@ -9,11 +9,13 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-//futuramente um import Role
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Getter
 @Setter
 @Entity
+@Table(name = "users")
 public class User {
 
     @Id
