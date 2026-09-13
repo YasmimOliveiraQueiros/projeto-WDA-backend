@@ -13,17 +13,13 @@ import lombok.Setter;
 public class Publisher {
 
     @Id
+    @Column(nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
-
     private String email;
-
     private String cnpj;
-
     private String city;
-
     private String state;
 
     @Enumerated(EnumType.STRING)
