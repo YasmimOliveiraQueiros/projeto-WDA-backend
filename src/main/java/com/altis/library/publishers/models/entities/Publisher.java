@@ -24,4 +24,16 @@ public class Publisher {
 
     @Enumerated(EnumType.STRING)
     private PublisherStatus status;
+
+    protected Publisher() {
+    }
+
+    public Publisher(String name, String email, String cnpj, String city, String state) {
+        this.name = name;
+        this.email = email;
+        this.cnpj = cnpj;
+        this.city = city;
+        this.state = state;
+        this.status = PublisherStatus.ACTIVE;
+    }
 }

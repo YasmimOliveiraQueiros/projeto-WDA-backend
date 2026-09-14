@@ -32,11 +32,11 @@ public class User {
 
     //constructors
 
-    public User() {
+    protected User() {
+
     }
 
-    public User(Long id, String name, String email, String password, String phone, String cpf, LocalDate birthDate, String address) {
-        this.id = id;
+    public User(String name, String email, String password, String phone, String cpf, LocalDate birthDate, String address) {
         this.name = name;
         this.email = email;
         this.password = password;
@@ -44,7 +44,10 @@ public class User {
         this.cpf = cpf;
         this.birthDate = birthDate;
         this.address = address;
-
+        this.isAdmin = false;
+        this.active = true;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
 

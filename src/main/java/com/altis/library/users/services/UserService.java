@@ -21,21 +21,15 @@ public class UserService {
 
     public UserResponse saveUser(UserRequest userRequest) {
 
-        User user = new User();
-
-        user.setName(userRequest.getName());
-        user.setEmail(userRequest.getEmail());
-        user.setPassword(userRequest.getPassword());
-        user.setPhone(userRequest.getPhone());
-        user.setCpf(userRequest.getCpf());
-        user.setBirthDate(userRequest.getBirthDate());
-        user.setAddress(userRequest.getAddress());
-
-        user.setAdmin(false);
-        user.setActive(true);
-
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
+        User user = new User(
+                userRequest.getName(),
+                userRequest.getEmail(),
+                userRequest.getPassword(),
+                userRequest.getPhone(),
+                userRequest.getCpf(),
+                userRequest.getBirthDate(),
+                userRequest.getAddress()
+        );
 
         User savedUser = userRepository.save(user);
 

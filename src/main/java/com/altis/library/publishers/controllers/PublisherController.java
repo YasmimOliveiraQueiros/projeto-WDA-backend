@@ -20,27 +20,26 @@ public class PublisherController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Publisher>> findAll() {
+    public ResponseEntity<List<PublisherResponse>> findAll() {
         return ResponseEntity.ok(publisherService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Publisher> findById(@PathVariable Long id) {
+    public ResponseEntity<PublisherResponse> findById(@PathVariable Long id) {
         return ResponseEntity.ok(publisherService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Publisher> save(@RequestBody Publisher publisher) {
-        return ResponseEntity.ok(publisherService.save(publisher));
+    public ResponseEntity<PublisherResponse> save(@RequestBody PublisherRequest request) {
+        return ResponseEntity.ok(publisherService.save(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Publisher> update(
+    public ResponseEntity<PublisherResponse> update(
             @PathVariable Long id,
-            @RequestBody Publisher publisher) {
+            @RequestBody PublisherRequest request) {
 
-        publisher.setId(id);
-        return ResponseEntity.ok(publisherService.update(publisher));
+        return ResponseEntity.ok(publisherService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
