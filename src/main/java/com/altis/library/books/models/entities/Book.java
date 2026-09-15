@@ -17,6 +17,7 @@ public class Book {
     private Long id;
     private String title;
     private String author;
+    private Integer quantity;
 
     @ManyToOne
     @JoinColumn(name = "publisher_id", nullable = false)
@@ -29,11 +30,11 @@ public class Book {
     protected Book() {
     }
 
-    public Book(String title, String author, Publisher publisher, String observations
-    ) {
+    public Book(String title, String author, Publisher publisher, Integer quantity, String observations) {
         this.title = title;
         this.author = author;
         this.publisher = publisher;
+        this.quantity = quantity;
         this.observations = observations;
         this.status = BookStatus.AVAILABLE;
     }

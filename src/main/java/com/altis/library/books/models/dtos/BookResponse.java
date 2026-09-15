@@ -11,6 +11,7 @@ public class BookResponse {
     private String title;
     private String author;
     private Long publisherId;
+    private Integer quantity;
     private BookStatus status;
     private String observations;
 }

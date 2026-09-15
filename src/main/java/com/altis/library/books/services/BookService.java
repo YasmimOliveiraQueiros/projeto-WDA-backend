@@ -32,7 +32,8 @@ public class BookService {
         Publisher publisher = publisherRepository.findById(request.getPublisherId())
                 .orElseThrow(() -> new RuntimeException("Publisher not found"));
 
-        Book book = new Book(request.getTitle(), request.getAuthor(), publisher, request.getObservations());
+        Book book = new Book(request.getTitle(), request.getAuthor(), publisher, request.getQuantity(), request.getObservations()
+        );
 
         Book savedBook = bookRepository.save(book);
 
@@ -70,6 +71,7 @@ public class BookService {
         book.setTitle(request.getTitle());
         book.setAuthor(request.getAuthor());
         book.setPublisher(publisher);
+        book.setQuantity(request.getQuantity());
         book.setObservations(request.getObservations());
 
         Book updatedBook = bookRepository.save(book);
@@ -94,6 +96,7 @@ public class BookService {
         response.setTitle(book.getTitle());
         response.setAuthor(book.getAuthor());
         response.setPublisherId(book.getPublisher().getId());
+        response.setQuantity(book.getQuantity());
         response.setStatus(book.getStatus());
         response.setObservations(book.getObservations());
 
