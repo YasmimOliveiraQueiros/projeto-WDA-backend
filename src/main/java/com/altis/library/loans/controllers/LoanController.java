@@ -5,6 +5,7 @@ import com.altis.library.loans.models.dtos.LoanResponse;
 import com.altis.library.loans.services.LoanService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class LoanController {
 
     @PostMapping
     public ResponseEntity<LoanResponse> create(
-            @RequestBody LoanRequest request) {
+            @Valid @RequestBody LoanRequest request) {
 
         return ResponseEntity.ok(loanService.create(request));
     }
@@ -38,9 +39,14 @@ public class LoanController {
     @PutMapping("/{id}")
     public ResponseEntity<LoanResponse> update(
             @PathVariable Long id,
-            @RequestBody LoanRequest request) {
+            @Valid @RequestBody LoanRequest request) {
 
         return ResponseEntity.ok(loanService.update(id, request));
+    }
+
+    @PatchMapping("/{id}/return")
+    public ResponseEntity<LoanResponse> returnLoan(@PathVariable Long id) {
+        return ResponseEntity.ok(loanService.returnLoan(id));
     }
 
     @DeleteMapping("/{id}")

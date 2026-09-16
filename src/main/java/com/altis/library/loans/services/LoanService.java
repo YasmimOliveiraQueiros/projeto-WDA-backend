@@ -49,6 +49,10 @@ public class LoanService {
             throw new RuntimeException("Book is unavailable");
         }
 
+        if (request.getReturnDate().isBefore(request.getLoanDate())) {
+            throw new RuntimeException("Return date cannot be before loan date");
+        }
+
         Loan loan = new Loan(user, book, request.getLoanDate(), request.getReturnDate(), request.getObservations()
         );
 
@@ -85,14 +89,14 @@ public class LoanService {
         Loan loan = loanRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Loan not found"));
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (loan.getStatus() == LoanStatus.RETURNED) {
+            throw new RuntimeException("Returned loan cannot be updated");
+        }
 
-        Book book = bookRepository.findById(request.getBookId())
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+        if (request.getReturnDate().isBefore(request.getLoanDate())) {
+            throw new RuntimeException("Return date cannot be before loan date");
+        }
 
-        loan.setUser(user);
-        loan.setBook(book);
         loan.setLoanDate(request.getLoanDate());
         loan.setReturnDate(request.getReturnDate());
         loan.setObservations(request.getObservations());
@@ -102,11 +106,43 @@ public class LoanService {
         return toResponse(updatedLoan);
     }
 
+
+    // return - registra que o livro alugado pelo usuário foi devolvido
+    public LoanResponse returnLoan(Long id) {
+
+        Loan loan = loanRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Loan not found"));
+
+        if (loan.getStatus() == LoanStatus.RETURNED) {
+            throw new RuntimeException("Loan has already been returned");
+        }
+
+        Book book = loan.getBook();
+
+        book.setQuantity(book.getQuantity() + 1);
+        bookRepository.save(book);
+
+        loan.setStatus(LoanStatus.RETURNED);
+        loan.setReturnedAt(java.time.LocalDateTime.now());
+
+        Loan returnedLoan = loanRepository.save(loan);
+
+        return toResponse(returnedLoan);
+    }
+
+
     // delete
     public void delete(Long id) {
 
         Loan loan = loanRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Loan not found"));
+
+        if (loan.getStatus() == LoanStatus.PENDING) {
+            Book book = loan.getBook();
+
+            book.setQuantity(book.getQuantity() + 1);
+            bookRepository.save(book);
+        }
 
         loanRepository.delete(loan);
     }
