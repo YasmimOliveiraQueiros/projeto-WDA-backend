@@ -44,6 +44,7 @@ public class LoanController {
         return ResponseEntity.ok(loanService.update(id, request));
     }
 
+    //return - registra que o livro emprestado foi devolvido
     @PatchMapping("/{id}/return")
     public ResponseEntity<LoanResponse> returnLoan(@PathVariable Long id) {
         return ResponseEntity.ok(loanService.returnLoan(id));
