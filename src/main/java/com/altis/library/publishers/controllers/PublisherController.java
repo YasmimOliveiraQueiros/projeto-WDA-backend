@@ -2,8 +2,8 @@ package com.altis.library.publishers.controllers;
 
 import com.altis.library.publishers.models.dtos.PublisherRequest;
 import com.altis.library.publishers.models.dtos.PublisherResponse;
-import com.altis.library.publishers.models.entities.Publisher;
 import com.altis.library.publishers.services.PublisherService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,14 +30,16 @@ public class PublisherController {
     }
 
     @PostMapping
-    public ResponseEntity<PublisherResponse> save(@RequestBody PublisherRequest request) {
+    public ResponseEntity<PublisherResponse> save(
+            @Valid @RequestBody PublisherRequest request) {
+
         return ResponseEntity.ok(publisherService.save(request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<PublisherResponse> update(
             @PathVariable Long id,
-            @RequestBody PublisherRequest request) {
+            @Valid @RequestBody PublisherRequest request) {
 
         return ResponseEntity.ok(publisherService.update(id, request));
     }

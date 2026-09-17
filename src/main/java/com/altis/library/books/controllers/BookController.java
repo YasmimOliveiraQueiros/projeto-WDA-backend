@@ -3,6 +3,7 @@ package com.altis.library.books.controllers;
 import com.altis.library.books.models.dtos.BookRequest;
 import com.altis.library.books.models.dtos.BookResponse;
 import com.altis.library.books.services.BookService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,9 @@ public class BookController {
     }
 
     @PostMapping
-    public ResponseEntity<BookResponse> create(@RequestBody BookRequest request) {
+    public ResponseEntity<BookResponse> create(
+            @Valid @RequestBody BookRequest request) {
+
         return ResponseEntity.ok(bookService.create(request));
     }
 
@@ -36,7 +39,7 @@ public class BookController {
     @PutMapping("/{id}")
     public ResponseEntity<BookResponse> update(
             @PathVariable Long id,
-            @RequestBody BookRequest request) {
+            @Valid @RequestBody BookRequest request) {
 
         return ResponseEntity.ok(bookService.update(id, request));
     }

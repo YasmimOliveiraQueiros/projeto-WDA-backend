@@ -19,7 +19,7 @@ public class User {
     private String name;
     private String email;
     private String password;
-    private String phone; // não é long ou int por ter caracteres como: (+, - e (85) )
+    private String phone; // não é long ou int por ter caracteres como: (+, - e (85))
     private String cpf; // segue a mesma lógica do string phone
     private LocalDate birthDate;
     private String address;
@@ -29,9 +29,7 @@ public class User {
     private LocalDateTime updatedAt;
 
 
-
-    //constructors
-
+    // constructors
     protected User() {
 
     }
@@ -46,9 +44,18 @@ public class User {
         this.address = address;
         this.isAdmin = false;
         this.active = true;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
 
+    // timestamps - registra quando alguma coisa aconteceu
+    @PrePersist
+    public void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

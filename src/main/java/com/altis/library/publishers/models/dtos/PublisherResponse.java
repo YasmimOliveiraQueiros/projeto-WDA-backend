@@ -14,5 +14,6 @@ public class PublisherResponse {
     private String cnpj;
     private String city;
     private String state;
+    private Long bookCount;
     private PublisherStatus status;
 }

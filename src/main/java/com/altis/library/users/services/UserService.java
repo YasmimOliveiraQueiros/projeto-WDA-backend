@@ -21,6 +21,14 @@ public class UserService {
 
     public UserResponse saveUser(UserRequest userRequest) {
 
+        if (userRepository.existsByEmail(userRequest.getEmail())) {
+            throw new RuntimeException("Email already registered");
+        }
+
+        if (userRepository.existsByCpf(userRequest.getCpf())) {
+            throw new RuntimeException("CPF already registered");
+        }
+
         User user = new User(
                 userRequest.getName(),
                 userRequest.getEmail(),
@@ -69,7 +77,6 @@ public class UserService {
             existingUser.setCpf(userRequest.getCpf());
             existingUser.setBirthDate(userRequest.getBirthDate());
             existingUser.setAddress(userRequest.getAddress());
-
             existingUser.setUpdatedAt(LocalDateTime.now());
 
             User updatedUser = userRepository.save(existingUser);
