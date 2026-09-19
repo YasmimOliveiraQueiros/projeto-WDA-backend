@@ -3,6 +3,7 @@ package com.altis.library.users.models.dtos;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -29,6 +30,7 @@ public class UserRequest {
     private String cpf;
 
     @NotNull(message = "User birth date is required")
+    @Past(message = "User birth date must be in the past")
     private LocalDate birthDate;
 
     @NotBlank(message = "User address is required")

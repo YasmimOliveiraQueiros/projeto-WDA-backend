@@ -2,11 +2,11 @@ package com.altis.library.users.services;
 
 import com.altis.library.users.models.entities.User;
 import com.altis.library.users.repositories.UserRepository;
+import org.springframework.expression.ExpressionException;
 import org.springframework.stereotype.Service;
 import com.altis.library.users.models.dtos.UserRequest;
 import com.altis.library.users.models.dtos.UserResponse;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -55,40 +55,44 @@ public class UserService {
 
     public UserResponse getUserById(Long id) {
 
-        User user = userRepository.findById(id).orElse(null);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ExpressionException("Usuário não encontrado"));
 
-        if (user != null) {
-            return convertToResponse(user);
-        }
-
-        return null;
+        return convertToResponse(user);
     }
 
     public UserResponse updateUser(Long id, UserRequest userRequest) {
 
-        User existingUser = userRepository.findById(id).orElse(null);
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new ExpressionException("Usuário não encontrado"));
 
-        if (existingUser != null) {
-
-            existingUser.setName(userRequest.getName());
-            existingUser.setEmail(userRequest.getEmail());
-            existingUser.setPassword(userRequest.getPassword());
-            existingUser.setPhone(userRequest.getPhone());
-            existingUser.setCpf(userRequest.getCpf());
-            existingUser.setBirthDate(userRequest.getBirthDate());
-            existingUser.setAddress(userRequest.getAddress());
-            existingUser.setUpdatedAt(LocalDateTime.now());
-
-            User updatedUser = userRepository.save(existingUser);
-
-            return convertToResponse(updatedUser);
+        if (userRepository.existsByEmailAndIdNot(userRequest.getEmail(), id)) {
+            throw new RuntimeException("Email already registered");
         }
 
-        return null;
+        if (userRepository.existsByCpfAndIdNot(userRequest.getCpf(), id)) {
+            throw new RuntimeException("CPF already registered");
+        }
+
+        existingUser.setName(userRequest.getName());
+        existingUser.setEmail(userRequest.getEmail());
+        existingUser.setPassword(userRequest.getPassword());
+        existingUser.setPhone(userRequest.getPhone());
+        existingUser.setCpf(userRequest.getCpf());
+        existingUser.setBirthDate(userRequest.getBirthDate());
+        existingUser.setAddress(userRequest.getAddress());
+
+        User updatedUser = userRepository.save(existingUser);
+
+        return convertToResponse(updatedUser);
     }
 
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ExpressionException("Usuário não encontrado"));
+
+        userRepository.delete(user);
     }
 
     private UserResponse convertToResponse(User user) {

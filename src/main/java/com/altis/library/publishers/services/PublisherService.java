@@ -6,6 +6,7 @@ import com.altis.library.publishers.models.dtos.PublisherResponse;
 import com.altis.library.publishers.repositories.PublisherRepository;
 import com.altis.library.books.repositories.BookRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.expression.ExpressionException;
 
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class PublisherService {
     // find by id
     public PublisherResponse findById(Long id) {
         Publisher publisher = publisherRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() -> new ExpressionException("Editora não encontrada"));
 
         return convertToResponse(publisher);
     }
@@ -65,7 +66,7 @@ public class PublisherService {
     public PublisherResponse update(Long id, PublisherRequest request) {
 
         Publisher publisher = publisherRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() -> new ExpressionException("Editora não encontrada"));
 
         if (publisherRepository.existsByNameAndIdNot(request.getName(), id)) {
             throw new RuntimeException("Publisher name already exists");

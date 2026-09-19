@@ -4,9 +4,7 @@ import com.altis.library.books.models.entities.Book;
 import com.altis.library.loans.models.enums.LoanStatus;
 import com.altis.library.users.models.entities.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
@@ -15,8 +13,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
 @Table(name = "loans")
 public class Loan {
 
@@ -45,4 +41,19 @@ public class Loan {
     private String observations;
 
 
+    // constructors
+
+    protected Loan() {
+
+    }
+
+    public Loan(User user, Book book, LocalDate loanDate, LocalDate returnDate, String observations
+    ) {
+        this.user = user;
+        this.book = book;
+        this.loanDate = loanDate;
+        this.returnDate = returnDate;
+        this.observations = observations;
+        this.status = LoanStatus.PENDING;
+    }
 }
