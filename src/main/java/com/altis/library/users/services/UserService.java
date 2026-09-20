@@ -3,6 +3,7 @@ package com.altis.library.users.services;
 import com.altis.library.users.models.entities.User;
 import com.altis.library.users.repositories.UserRepository;
 import org.springframework.expression.ExpressionException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.altis.library.users.models.dtos.UserRequest;
 import com.altis.library.users.models.dtos.UserResponse;
@@ -14,9 +15,11 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UserResponse saveUser(UserRequest userRequest) {
@@ -32,7 +35,7 @@ public class UserService {
         User user = new User(
                 userRequest.getName(),
                 userRequest.getEmail(),
-                userRequest.getPassword(),
+                passwordEncoder.encode(userRequest.getPassword()),
                 userRequest.getPhone(),
                 userRequest.getCpf(),
                 userRequest.getBirthDate(),
@@ -76,7 +79,7 @@ public class UserService {
 
         existingUser.setName(userRequest.getName());
         existingUser.setEmail(userRequest.getEmail());
-        existingUser.setPassword(userRequest.getPassword());
+        existingUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         existingUser.setPhone(userRequest.getPhone());
         existingUser.setCpf(userRequest.getCpf());
         existingUser.setBirthDate(userRequest.getBirthDate());
