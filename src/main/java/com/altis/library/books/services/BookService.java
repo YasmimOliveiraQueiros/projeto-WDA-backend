@@ -1,5 +1,6 @@
 package com.altis.library.books.services;
 
+import com.altis.library.mappers.BookMapper;
 import com.altis.library.publishers.models.entities.Publisher;
 import com.altis.library.publishers.repositories.PublisherRepository;
 import com.altis.library.books.repositories.BookRepository;
@@ -17,13 +18,16 @@ public class BookService {
     //consulta a editora pelo id
     private final BookRepository bookRepository;
     private final PublisherRepository publisherRepository;
+    private final BookMapper bookMapper;
 
     public BookService(
             BookRepository bookRepository,
-            PublisherRepository publisherRepository) {
+            PublisherRepository publisherRepository,
+            BookMapper bookMapper) {
 
         this.bookRepository = bookRepository;
         this.publisherRepository = publisherRepository;
+        this.bookMapper = bookMapper;
     }
 
     //create
@@ -32,12 +36,11 @@ public class BookService {
         Publisher publisher = publisherRepository.findById(request.getPublisherId())
                 .orElseThrow(() -> new RuntimeException("Publisher not found"));
 
-        Book book = new Book(request.getTitle(), request.getAuthor(), publisher, request.getQuantity(), request.getObservations()
-        );
+        Book book = bookMapper.toEntity(request, publisher);
 
         Book savedBook = bookRepository.save(book);
 
-        return toResponse(savedBook);
+        return bookMapper.toResponse(savedBook);
     }
 
     //getAll
@@ -46,7 +49,7 @@ public class BookService {
         List<Book> books = bookRepository.findAll();
 
         return books.stream()
-                .map(this::toResponse)
+                .map(bookMapper::toResponse)
                 .toList();
     }
 
@@ -56,7 +59,7 @@ public class BookService {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
-        return toResponse(book);
+        return bookMapper.toResponse(book);
     }
 
     //update
@@ -68,15 +71,17 @@ public class BookService {
         Publisher publisher = publisherRepository.findById(request.getPublisherId())
                 .orElseThrow(() -> new RuntimeException("Publisher not found"));
 
-        book.setTitle(request.getTitle());
-        book.setAuthor(request.getAuthor());
-        book.setPublisher(publisher);
-        book.setQuantity(request.getQuantity());
-        book.setObservations(request.getObservations());
+        Book mappedBook = bookMapper.toEntity(request, publisher);
+
+        book.setTitle(mappedBook.getTitle());
+        book.setAuthor(mappedBook.getAuthor());
+        book.setPublisher(mappedBook.getPublisher());
+        book.setQuantity(mappedBook.getQuantity());
+        book.setObservations(mappedBook.getObservations());
 
         Book updatedBook = bookRepository.save(book);
 
-        return toResponse(updatedBook);
+        return bookMapper.toResponse(updatedBook);
     }
 
     //delete
@@ -86,21 +91,6 @@ public class BookService {
                 .orElseThrow(() -> new RuntimeException("Book not found"));
 
         bookRepository.delete(book);
-    }
-
-    private BookResponse toResponse(Book book) {
-
-        BookResponse response = new BookResponse();
-
-        response.setId(book.getId());
-        response.setTitle(book.getTitle());
-        response.setAuthor(book.getAuthor());
-        response.setPublisherId(book.getPublisher().getId());
-        response.setQuantity(book.getQuantity());
-        response.setStatus(book.getStatus());
-        response.setObservations(book.getObservations());
-
-        return response;
     }
 
 }

@@ -1,5 +1,6 @@
 package com.altis.library.publishers.services;
 
+import com.altis.library.mappers.PublisherMapper;
 import com.altis.library.publishers.models.entities.Publisher;
 import com.altis.library.publishers.models.dtos.PublisherRequest;
 import com.altis.library.publishers.models.dtos.PublisherResponse;
@@ -15,11 +16,16 @@ public class PublisherService {
 
     private final PublisherRepository publisherRepository;
     private final BookRepository bookRepository;
+    private final PublisherMapper publisherMapper;
 
     // mostra/puxa os títulos que existem vinculados a uma editora
-    public PublisherService(PublisherRepository publisherRepository, BookRepository bookRepository) {
+    public PublisherService(
+            PublisherRepository publisherRepository,
+            BookRepository bookRepository,
+            PublisherMapper publisherMapper) {
         this.publisherRepository = publisherRepository;
         this.bookRepository = bookRepository;
+        this.publisherMapper = publisherMapper;
     }
 
     // find all
@@ -49,13 +55,7 @@ public class PublisherService {
             throw new RuntimeException("CNPJ already exists");
         }
 
-        Publisher publisher = new Publisher(
-                request.getName(),
-                request.getEmail(),
-                request.getCnpj(),
-                request.getCity(),
-                request.getState()
-        );
+        Publisher publisher = publisherMapper.toEntity(request);
 
         Publisher savedPublisher = publisherRepository.save(publisher);
 
@@ -76,11 +76,13 @@ public class PublisherService {
             throw new RuntimeException("CNPJ already exists");
         }
 
-        publisher.setName(request.getName());
-        publisher.setEmail(request.getEmail());
-        publisher.setCnpj(request.getCnpj());
-        publisher.setCity(request.getCity());
-        publisher.setState(request.getState());
+        Publisher mappedPublisher = publisherMapper.toEntity(request);
+
+        publisher.setName(mappedPublisher.getName());
+        publisher.setEmail(mappedPublisher.getEmail());
+        publisher.setCnpj(mappedPublisher.getCnpj());
+        publisher.setCity(mappedPublisher.getCity());
+        publisher.setState(mappedPublisher.getState());
 
         Publisher updatedPublisher = publisherRepository.save(publisher);
 
@@ -93,16 +95,7 @@ public class PublisherService {
     }
 
     private PublisherResponse convertToResponse(Publisher publisher) {
-
-        PublisherResponse response = new PublisherResponse();
-
-        response.setId(publisher.getId());
-        response.setName(publisher.getName());
-        response.setEmail(publisher.getEmail());
-        response.setCnpj(publisher.getCnpj());
-        response.setCity(publisher.getCity());
-        response.setState(publisher.getState());
-        response.setStatus(publisher.getStatus());
+        PublisherResponse response = publisherMapper.toResponse(publisher);
 
         response.setBookCount(
                 bookRepository.countByPublisherId(publisher.getId())

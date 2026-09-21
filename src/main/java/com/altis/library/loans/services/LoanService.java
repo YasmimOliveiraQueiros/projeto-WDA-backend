@@ -2,6 +2,7 @@ package com.altis.library.loans.services;
 
 import com.altis.library.books.models.entities.Book;
 import com.altis.library.books.repositories.BookRepository;
+import com.altis.library.mappers.LoanMapper;
 import com.altis.library.loans.models.dtos.LoanRequest;
 import com.altis.library.loans.models.dtos.LoanResponse;
 import com.altis.library.loans.models.entities.Loan;
@@ -19,12 +20,18 @@ public class LoanService {
     private final LoanRepository loanRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
+    private final LoanMapper loanMapper;
 
-    public LoanService(LoanRepository loanRepository, UserRepository userRepository, BookRepository bookRepository) {
+    public LoanService(
+            LoanRepository loanRepository,
+            UserRepository userRepository,
+            BookRepository bookRepository,
+            LoanMapper loanMapper) {
 
         this.loanRepository = loanRepository;
         this.userRepository = userRepository;
         this.bookRepository = bookRepository;
+        this.loanMapper = loanMapper;
     }
 
     // create
@@ -53,15 +60,14 @@ public class LoanService {
             throw new RuntimeException("Return date cannot be before loan date");
         }
 
-        Loan loan = new Loan(user, book, request.getLoanDate(), request.getReturnDate(), request.getObservations()
-        );
+        Loan loan = loanMapper.toEntity(request, user, book);
 
         book.setQuantity(book.getQuantity() - 1);
         bookRepository.save(book);
 
         Loan savedLoan = loanRepository.save(loan);
 
-        return toResponse(savedLoan);
+        return loanMapper.toResponse(savedLoan);
     }
 
     // getAll
@@ -70,7 +76,7 @@ public class LoanService {
         List<Loan> loans = loanRepository.findAll();
 
         return loans.stream()
-                .map(this::toResponse)
+                .map(loanMapper::toResponse)
                 .toList();
     }
 
@@ -80,7 +86,7 @@ public class LoanService {
         Loan loan = loanRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Loan not found"));
 
-        return toResponse(loan);
+        return loanMapper.toResponse(loan);
     }
 
     // update
@@ -103,7 +109,7 @@ public class LoanService {
 
         Loan updatedLoan = loanRepository.save(loan);
 
-        return toResponse(updatedLoan);
+        return loanMapper.toResponse(updatedLoan);
     }
 
 
@@ -127,7 +133,7 @@ public class LoanService {
 
         Loan returnedLoan = loanRepository.save(loan);
 
-        return toResponse(returnedLoan);
+        return loanMapper.toResponse(returnedLoan);
     }
 
 
@@ -147,19 +153,4 @@ public class LoanService {
         loanRepository.delete(loan);
     }
 
-    private LoanResponse toResponse(Loan loan) {
-
-        LoanResponse response = new LoanResponse();
-
-        response.setId(loan.getId());
-        response.setUserId(loan.getUser().getId());
-        response.setBookId(loan.getBook().getId());
-        response.setLoanDate(loan.getLoanDate());
-        response.setReturnDate(loan.getReturnDate());
-        response.setReturnedAt(loan.getReturnedAt());
-        response.setStatus(loan.getStatus());
-        response.setObservations(loan.getObservations());
-
-        return response;
-    }
 }

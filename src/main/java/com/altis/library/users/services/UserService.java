@@ -1,5 +1,6 @@
 package com.altis.library.users.services;
 
+import com.altis.library.mappers.UserMapper;
 import com.altis.library.users.models.entities.User;
 import com.altis.library.users.repositories.UserRepository;
 import org.springframework.expression.ExpressionException;
@@ -16,10 +17,15 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userMapper = userMapper;
     }
 
     public UserResponse saveUser(UserRequest userRequest) {
@@ -32,19 +38,12 @@ public class UserService {
             throw new RuntimeException("CPF already registered");
         }
 
-        User user = new User(
-                userRequest.getName(),
-                userRequest.getEmail(),
-                passwordEncoder.encode(userRequest.getPassword()),
-                userRequest.getPhone(),
-                userRequest.getCpf(),
-                userRequest.getBirthDate(),
-                userRequest.getAddress()
-        );
+        User user = userMapper.toEntity(userRequest);
+        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 
         User savedUser = userRepository.save(user);
 
-        return convertToResponse(savedUser);
+        return userMapper.toResponse(savedUser);
     }
 
     public List<UserResponse> getAllUsers() {
@@ -52,7 +51,7 @@ public class UserService {
         List<User> users = userRepository.findAll();
 
         return users.stream()
-                .map(this::convertToResponse)
+                .map(userMapper::toResponse)
                 .toList();
     }
 
@@ -61,7 +60,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ExpressionException("Usuário não encontrado"));
 
-        return convertToResponse(user);
+        return userMapper.toResponse(user);
     }
 
     public UserResponse updateUser(Long id, UserRequest userRequest) {
@@ -77,17 +76,19 @@ public class UserService {
             throw new RuntimeException("CPF already registered");
         }
 
-        existingUser.setName(userRequest.getName());
-        existingUser.setEmail(userRequest.getEmail());
+        User mappedUser = userMapper.toEntity(userRequest);
+
+        existingUser.setName(mappedUser.getName());
+        existingUser.setEmail(mappedUser.getEmail());
         existingUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-        existingUser.setPhone(userRequest.getPhone());
-        existingUser.setCpf(userRequest.getCpf());
-        existingUser.setBirthDate(userRequest.getBirthDate());
-        existingUser.setAddress(userRequest.getAddress());
+        existingUser.setPhone(mappedUser.getPhone());
+        existingUser.setCpf(mappedUser.getCpf());
+        existingUser.setBirthDate(mappedUser.getBirthDate());
+        existingUser.setAddress(mappedUser.getAddress());
 
         User updatedUser = userRepository.save(existingUser);
 
-        return convertToResponse(updatedUser);
+        return userMapper.toResponse(updatedUser);
     }
 
     public void deleteUser(Long id) {
@@ -96,24 +97,5 @@ public class UserService {
                 .orElseThrow(() -> new ExpressionException("Usuário não encontrado"));
 
         userRepository.delete(user);
-    }
-
-    private UserResponse convertToResponse(User user) {
-
-        UserResponse response = new UserResponse();
-
-        response.setId(user.getId());
-        response.setName(user.getName());
-        response.setEmail(user.getEmail());
-        response.setPhone(user.getPhone());
-        response.setCpf(user.getCpf());
-        response.setBirthDate(user.getBirthDate());
-        response.setAddress(user.getAddress());
-        response.setAdmin(user.isAdmin());
-        response.setActive(user.isActive());
-        response.setCreatedAt(user.getCreatedAt());
-        response.setUpdatedAt(user.getUpdatedAt());
-
-        return response;
     }
 }
