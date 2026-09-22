@@ -1,5 +1,7 @@
 package com.altis.library.auth.services;
 
+import com.altis.library.auth.models.dtos.LoginResponse;
+import com.nimbusds.jose.JOSEException;
 import com.altis.library.users.models.entities.User;
 import com.altis.library.users.repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,13 +12,18 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
-    public User authenticateByEmail(String email, String password) {
+    public LoginResponse authenticateByEmail(String email, String password) {
         User user = userRepository.findByEmail(email);
 
         if (user == null) {
@@ -31,6 +38,10 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
 
-        return user;
+        try {
+            return new LoginResponse(jwtService.generateToken(user.getEmail()));
+        } catch (JOSEException exception) {
+            throw new IllegalStateException("Unable to generate authentication token", exception);
+        }
     }
 }

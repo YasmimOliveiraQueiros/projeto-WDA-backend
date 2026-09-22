@@ -1,10 +1,9 @@
 package com.altis.library.auth.controllers;
 
 import com.altis.library.auth.models.dtos.LoginRequest;
+import com.altis.library.auth.models.dtos.LoginResponse;
+import com.altis.library.auth.services.AuthService;
 import jakarta.validation.Valid;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,19 +13,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
+    private final AuthService authService;
 
-    public AuthController(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
     @PostMapping("/login")
-    public Authentication login(@Valid @RequestBody LoginRequest request) {
-        return authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
+    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
+        return authService.authenticateByEmail(
+                request.getEmail(),
+                request.getPassword()
         );
     }
 }
