@@ -4,6 +4,7 @@ import com.altis.library.books.models.dtos.BookRequest;
 import com.altis.library.books.models.dtos.BookResponse;
 import com.altis.library.books.services.BookService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/books")
+@SecurityRequirement(name = "bearerAuth")
 public class BookController {
 
     private final BookService bookService;

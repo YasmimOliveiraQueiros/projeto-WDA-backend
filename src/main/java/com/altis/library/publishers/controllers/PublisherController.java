@@ -4,6 +4,7 @@ import com.altis.library.publishers.models.dtos.PublisherRequest;
 import com.altis.library.publishers.models.dtos.PublisherResponse;
 import com.altis.library.publishers.services.PublisherService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/publishers")
+@SecurityRequirement(name = "bearerAuth")
 public class PublisherController {
 
     private final PublisherService publisherService;

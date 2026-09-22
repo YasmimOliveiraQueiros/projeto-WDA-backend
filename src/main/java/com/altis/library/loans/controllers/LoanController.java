@@ -3,6 +3,7 @@ package com.altis.library.loans.controllers;
 import com.altis.library.loans.models.dtos.LoanRequest;
 import com.altis.library.loans.models.dtos.LoanResponse;
 import com.altis.library.loans.services.LoanService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/loans")
+@SecurityRequirement(name = "bearerAuth")
 public class LoanController {
 
     private final LoanService loanService;
