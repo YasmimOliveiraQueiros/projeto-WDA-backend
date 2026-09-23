@@ -22,8 +22,14 @@ public class LoanController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LoanResponse>> getAll() {
-        return ResponseEntity.ok(loanService.getAll());
+    public ResponseEntity<List<LoanResponse>> getAll(
+            @RequestParam(required = false) String name) {
+        return ResponseEntity.ok(loanService.getAll(name));
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<LoanResponse>> getMyLoans() {
+        return ResponseEntity.ok(loanService.getMyLoans());
     }
 
     @GetMapping("/{id}")

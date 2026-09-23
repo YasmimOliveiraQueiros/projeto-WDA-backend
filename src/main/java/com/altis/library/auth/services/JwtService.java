@@ -23,11 +23,12 @@ public class JwtService {
         this.secretKey = secretKey;
     }
 
-    public String generateToken(String email) throws JOSEException {
+    public String generateToken(String email, boolean isAdmin) throws JOSEException {
         Instant issuedAt = Instant.now();
 
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .subject(email)
+                .claim("role", isAdmin ? "ADMIN" : "USER")
                 .issueTime(Date.from(issuedAt))
                 .expirationTime(Date.from(issuedAt.plusSeconds(3600)))
                 .build();
@@ -66,6 +67,36 @@ public class JwtService {
             }
 
             return claims.getSubject();
+        } catch (JOSEException | ParseException exception) {
+            return null;
+        }
+    }
+
+    public String getRole(String token) {
+        if (token == null) {
+            return null;
+        }
+
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+
+            if (!JWSAlgorithm.HS256.equals(signedJWT.getHeader().getAlgorithm())) {
+                return null;
+            }
+
+            if (!signedJWT.verify(new MACVerifier(secretKey.getEncoded()))) {
+                return null;
+            }
+
+            JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
+            Date expirationTime = claims.getExpirationTime();
+
+            if (expirationTime == null || !expirationTime.after(new Date())) {
+                return null;
+            }
+
+            String role = claims.getStringClaim("role");
+            return "ADMIN".equals(role) || "USER".equals(role) ? role : null;
         } catch (JOSEException | ParseException exception) {
             return null;
         }

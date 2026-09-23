@@ -40,6 +40,11 @@ public class SecurityConfig {
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**")
                         .permitAll()
+                        .requestMatchers("/users/**").hasRole("ADMIN")
+                        .requestMatchers("/books/**").hasRole("ADMIN")
+                        .requestMatchers("/publishers/**").hasRole("ADMIN")
+                        .requestMatchers("/loans/my").hasRole("USER")
+                        .requestMatchers("/loans/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 );
 

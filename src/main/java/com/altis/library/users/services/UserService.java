@@ -48,7 +48,7 @@ public class UserService {
 
     public List<UserResponse> getAllUsers() {
 
-        List<User> users = userRepository.findAll();
+        List<User> users = userRepository.findByIsAdminFalse();
 
         return users.stream()
                 .map(userMapper::toResponse)
@@ -57,7 +57,7 @@ public class UserService {
 
     public UserResponse getUserById(Long id) {
 
-        User user = userRepository.findById(id)
+        User user = userRepository.findByIdAndIsAdminFalse(id)
                 .orElseThrow(() -> new ExpressionException("Usuário não encontrado"));
 
         return userMapper.toResponse(user);
@@ -65,7 +65,7 @@ public class UserService {
 
     public UserResponse updateUser(Long id, UserRequest userRequest) {
 
-        User existingUser = userRepository.findById(id)
+        User existingUser = userRepository.findByIdAndIsAdminFalse(id)
                 .orElseThrow(() -> new ExpressionException("Usuário não encontrado"));
 
         if (userRepository.existsByEmailAndIdNot(userRequest.getEmail(), id)) {
@@ -80,7 +80,6 @@ public class UserService {
 
         existingUser.setName(mappedUser.getName());
         existingUser.setEmail(mappedUser.getEmail());
-        existingUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         existingUser.setPhone(mappedUser.getPhone());
         existingUser.setCpf(mappedUser.getCpf());
         existingUser.setBirthDate(mappedUser.getBirthDate());
@@ -93,7 +92,7 @@ public class UserService {
 
     public void deleteUser(Long id) {
 
-        User user = userRepository.findById(id)
+        User user = userRepository.findByIdAndIsAdminFalse(id)
                 .orElseThrow(() -> new ExpressionException("Usuário não encontrado"));
 
         userRepository.delete(user);

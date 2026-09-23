@@ -39,7 +39,11 @@ public class AuthService {
         }
 
         try {
-            return new LoginResponse(jwtService.generateToken(user.getEmail()));
+            String role = user.isAdmin() ? "ADMIN" : "USER";
+            return new LoginResponse(
+                    jwtService.generateToken(user.getEmail(), user.isAdmin()),
+                    role
+            );
         } catch (JOSEException exception) {
             throw new IllegalStateException("Unable to generate authentication token", exception);
         }

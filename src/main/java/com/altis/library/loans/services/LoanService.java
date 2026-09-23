@@ -10,6 +10,7 @@ import com.altis.library.loans.repositories.LoanRepository;
 import com.altis.library.users.models.entities.User;
 import com.altis.library.users.repositories.UserRepository;
 import com.altis.library.loans.models.enums.LoanStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -71,9 +72,27 @@ public class LoanService {
     }
 
     // getAll
-    public List<LoanResponse> getAll() {
+    public List<LoanResponse> getAll(String name) {
 
-        List<Loan> loans = loanRepository.findAll();
+        List<Loan> loans = name == null || name.isBlank()
+                ? loanRepository.findAll()
+                : loanRepository.findByUser_NameContainingIgnoreCase(name);
+
+        return loans.stream()
+                .map(loanMapper::toResponse)
+                .toList();
+    }
+
+    public List<LoanResponse> getMyLoans() {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        List<Loan> loans = loanRepository.findByUserId(user.getId());
 
         return loans.stream()
                 .map(loanMapper::toResponse)
