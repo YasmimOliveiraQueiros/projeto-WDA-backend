@@ -37,12 +37,17 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers(
+                                "/auth/login",
+                                "/auth/password-recovery/verify",
+                                "/auth/password-recovery/reset"
+                        ).permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**")
                         .permitAll()
                         .requestMatchers("/users/**").hasRole("ADMIN")
                         .requestMatchers("/books/**").hasRole("ADMIN")
                         .requestMatchers("/publishers/**").hasRole("ADMIN")
+                        .requestMatchers("/dashboard").hasRole("ADMIN")
                         .requestMatchers("/loans/my").hasRole("USER")
                         .requestMatchers("/loans/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

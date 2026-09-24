@@ -1,6 +1,8 @@
 package com.altis.library.auth.services;
 
 import com.altis.library.auth.models.dtos.LoginResponse;
+import com.altis.library.auth.models.dtos.PasswordRecoveryVerificationRequest;
+import com.altis.library.auth.models.dtos.PasswordResetRequest;
 import com.nimbusds.jose.JOSEException;
 import com.altis.library.users.models.entities.User;
 import com.altis.library.users.repositories.UserRepository;
@@ -47,5 +49,22 @@ public class AuthService {
         } catch (JOSEException exception) {
             throw new IllegalStateException("Unable to generate authentication token", exception);
         }
+    }
+
+    public void verifyPasswordRecovery(PasswordRecoveryVerificationRequest request) {
+        userRepository.findByEmailAndCpf(request.getEmail(), request.getCpf())
+                .orElseThrow(() -> new RuntimeException("Email and CPF do not match"));
+    }
+
+    public void resetPassword(PasswordResetRequest request) {
+        User user = userRepository.findByEmailAndCpf(request.getEmail(), request.getCpf())
+                .orElseThrow(() -> new RuntimeException("Email and CPF do not match"));
+
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("Passwords do not match");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }
