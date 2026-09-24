@@ -13,27 +13,27 @@ import java.time.LocalDate;
 @Setter
 public class UserRequest {
 
-    @NotBlank(message = "User name is required")
+    @NotBlank(message = "Nome é obrigatório.")
     private String name;
 
-    @NotBlank(message = "User email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "E-mail é obrigatório.")
+    @Email(message = "E-mail inválido.")
     private String email;
 
-    @NotBlank(message = "User password is required")
+    @NotBlank(message = "Senha é obrigatória.")
     private String password;
 
-    @NotBlank(message = "User phone is required")
+    @NotBlank(message = "Telefone é obrigatório.")
     private String phone;
 
-    @NotBlank(message = "User CPF is required")
+    @NotBlank(message = "CPF é obrigatório.")
     private String cpf;
 
-    @NotNull(message = "User birth date is required")
-    @Past(message = "User birth date must be in the past")
+    @NotNull(message = "Data de nascimento é obrigatória.")
+    @Past(message = "A data de nascimento deve estar no passado.")
     private LocalDate birthDate;
 
-    @NotBlank(message = "User address is required")
+    @NotBlank(message = "Endereço é obrigatório.")
     private String address;
 
     public UserRequest() {

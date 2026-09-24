@@ -2,6 +2,10 @@ package com.altis.library.config;
 
 import com.altis.library.auth.filters.JwtAuthenticationFilter;
 import com.altis.library.auth.services.JwtService;
+import com.altis.library.exceptions.ApiErrorResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -9,6 +13,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Configuration
 public class SecurityConfig {
@@ -25,17 +32,45 @@ public class SecurityConfig {
     }
 
     @Bean
+    public ObjectMapper objectMapper() {
+        return JsonMapper.builder()
+                .findAndAddModules()
+                .build();
+    }
+
+    @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
             throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            ObjectMapper objectMapper) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint((request, response, exception) ->
+                                writeSecurityError(
+                                        response,
+                                        objectMapper,
+                                        HttpServletResponse.SC_UNAUTHORIZED,
+                                        "Unauthorized",
+                                        "Token de autenticação inválido ou expirado.",
+                                        request.getRequestURI()
+                                ))
+                        .accessDeniedHandler((request, response, exception) ->
+                                writeSecurityError(
+                                        response,
+                                        objectMapper,
+                                        HttpServletResponse.SC_FORBIDDEN,
+                                        "Forbidden",
+                                        "Acesso negado.",
+                                        request.getRequestURI()
+                                )))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/auth/login",
@@ -54,5 +89,27 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    private void writeSecurityError(
+            HttpServletResponse response,
+            ObjectMapper objectMapper,
+            int status,
+            String error,
+            String message,
+            String path) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                LocalDateTime.now(),
+                status,
+                error,
+                message,
+                path
+        );
+
+        objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }

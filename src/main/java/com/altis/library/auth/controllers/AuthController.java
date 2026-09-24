@@ -6,6 +6,7 @@ import com.altis.library.auth.models.dtos.PasswordRecoveryVerificationRequest;
 import com.altis.library.auth.models.dtos.PasswordResetRequest;
 import com.altis.library.auth.services.AuthService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,13 +31,16 @@ public class AuthController {
     }
 
     @PostMapping("/password-recovery/verify")
-    public void verifyPasswordRecovery(
+    public ResponseEntity<Void> verifyPasswordRecovery(
             @Valid @RequestBody PasswordRecoveryVerificationRequest request) {
         authService.verifyPasswordRecovery(request);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/password-recovery/reset")
-    public void resetPassword(@Valid @RequestBody PasswordResetRequest request) {
+    public ResponseEntity<Void> resetPassword(
+            @Valid @RequestBody PasswordResetRequest request) {
         authService.resetPassword(request);
+        return ResponseEntity.noContent().build();
     }
 }

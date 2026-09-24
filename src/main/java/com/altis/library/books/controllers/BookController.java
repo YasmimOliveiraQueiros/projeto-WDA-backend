@@ -5,10 +5,11 @@ import com.altis.library.books.models.dtos.BookResponse;
 import com.altis.library.books.services.BookService;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/books")
@@ -25,12 +26,24 @@ public class BookController {
     public ResponseEntity<BookResponse> create(
             @Valid @RequestBody BookRequest request) {
 
-        return ResponseEntity.ok(bookService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(bookService.create(request));
     }
 
     @GetMapping
-    public ResponseEntity<List<BookResponse>> getAll() {
-        return ResponseEntity.ok(bookService.getAll());
+    public ResponseEntity<Page<BookResponse>> getAll(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+        return ResponseEntity.ok(bookService.getAll(
+                search,
+                page,
+                size,
+                sortBy,
+                sortDirection
+        ));
     }
 
     @GetMapping("/{id}")

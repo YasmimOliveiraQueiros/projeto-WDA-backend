@@ -2,6 +2,8 @@ package com.altis.library.loans.services;
 
 import com.altis.library.books.models.entities.Book;
 import com.altis.library.books.repositories.BookRepository;
+import com.altis.library.exceptions.ConflictException;
+import com.altis.library.exceptions.ResourceNotFoundException;
 import com.altis.library.mappers.LoanMapper;
 import com.altis.library.loans.models.dtos.LoanRequest;
 import com.altis.library.loans.models.dtos.LoanResponse;
@@ -12,8 +14,12 @@ import com.altis.library.users.repositories.UserRepository;
 import com.altis.library.loans.models.enums.LoanStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import com.altis.library.loans.repositories.LoanSpecification;
 
 @Service
 public class LoanService {
@@ -39,7 +45,8 @@ public class LoanService {
     public LoanResponse create(LoanRequest request) {
 
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Usuário não encontrado."));
 
         long activeLoans = loanRepository.countByUserIdAndStatus(
                 user.getId(),
@@ -47,18 +54,25 @@ public class LoanService {
         );
 
         if (activeLoans >= 5) {
-            throw new RuntimeException("User has reached the maximum of 5 active loans");
+            throw new ConflictException(
+                    "O usuário atingiu o limite de empréstimos ativos."
+            );
         }
 
         Book book = bookRepository.findById(request.getBookId())
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Livro não encontrado."));
 
         if (book.getQuantity() <= 0) {
-            throw new RuntimeException("Book is unavailable");
+            throw new ConflictException(
+                    "O livro não possui exemplares disponíveis."
+            );
         }
 
         if (request.getReturnDate().isBefore(request.getLoanDate())) {
-            throw new RuntimeException("Return date cannot be before loan date");
+            throw new IllegalArgumentException(
+                    "A data de devolução não pode ser anterior à data do empréstimo."
+            );
         }
 
         Loan loan = loanMapper.toEntity(request, user, book);
@@ -72,38 +86,75 @@ public class LoanService {
     }
 
     // getAll
-    public List<LoanResponse> getAll(String name) {
+    public Page<LoanResponse> getAll(
+            String name,
+            int page,
+            int size,
+            String sortBy,
+            String sortDirection) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                resolveSort(sortBy, sortDirection)
+        );
 
-        List<Loan> loans = name == null || name.isBlank()
-                ? loanRepository.findAll()
-                : loanRepository.findByUser_NameContainingIgnoreCase(name);
+        Specification<Loan> loanSpecification =
+                LoanSpecification.searchSpecification(name);
 
-        return loans.stream()
-                .map(loanMapper::toResponse)
-                .toList();
+        return loanRepository.findAll(loanSpecification, pageable)
+                .map(loanMapper::toResponse);
     }
 
-    public List<LoanResponse> getMyLoans() {
+    public Page<LoanResponse> getMyLoans(
+            int page,
+            int size,
+            String sortBy,
+            String sortDirection) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(email);
 
         if (user == null) {
-            throw new RuntimeException("User not found");
+            throw new ResourceNotFoundException("Usuário não encontrado.");
         }
 
-        List<Loan> loans = loanRepository.findByUserId(user.getId());
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                resolveSort(sortBy, sortDirection)
+        );
 
-        return loans.stream()
-                .map(loanMapper::toResponse)
-                .toList();
+        return loanRepository.findByUserId(user.getId(), pageable)
+                .map(loanMapper::toResponse);
+    }
+
+    private Sort resolveSort(String sortBy, String sortDirection) {
+        String property = switch (sortBy == null ? "" : sortBy.trim()) {
+            case "id", "loanDate", "returnDate", "returnedAt", "status" ->
+                    sortBy.trim();
+            default -> throw new IllegalArgumentException(
+                    "Campo de ordenação inválido."
+            );
+        };
+
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.valueOf(sortDirection.trim().toUpperCase());
+        } catch (Exception exception) {
+            throw new IllegalArgumentException(
+                    "A direção da ordenação deve ser ASC ou DESC."
+            );
+        }
+
+        return Sort.by(direction, property);
     }
 
     // getById
     public LoanResponse getById(Long id) {
 
         Loan loan = loanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loan not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Empréstimo não encontrado."));
 
         return loanMapper.toResponse(loan);
     }
@@ -112,14 +163,19 @@ public class LoanService {
     public LoanResponse update(Long id, LoanRequest request) {
 
         Loan loan = loanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loan not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Empréstimo não encontrado."));
 
         if (loan.getStatus() == LoanStatus.RETURNED) {
-            throw new RuntimeException("Returned loan cannot be updated");
+            throw new ConflictException(
+                    "Empréstimos devolvidos não podem ser alterados."
+            );
         }
 
         if (request.getReturnDate().isBefore(request.getLoanDate())) {
-            throw new RuntimeException("Return date cannot be before loan date");
+            throw new IllegalArgumentException(
+                    "A data de devolução não pode ser anterior à data do empréstimo."
+            );
         }
 
         loan.setLoanDate(request.getLoanDate());
@@ -136,10 +192,11 @@ public class LoanService {
     public LoanResponse returnLoan(Long id) {
 
         Loan loan = loanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loan not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Empréstimo não encontrado."));
 
         if (loan.getStatus() == LoanStatus.RETURNED) {
-            throw new RuntimeException("Loan has already been returned");
+            throw new ConflictException("O empréstimo já foi devolvido.");
         }
 
         Book book = loan.getBook();
@@ -160,7 +217,8 @@ public class LoanService {
     public void delete(Long id) {
 
         Loan loan = loanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loan not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Empréstimo não encontrado."));
 
         if (loan.getStatus() == LoanStatus.PENDING) {
             Book book = loan.getBook();

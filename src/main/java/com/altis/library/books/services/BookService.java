@@ -1,5 +1,6 @@
 package com.altis.library.books.services;
 
+import com.altis.library.exceptions.ResourceNotFoundException;
 import com.altis.library.mappers.BookMapper;
 import com.altis.library.publishers.models.entities.Publisher;
 import com.altis.library.publishers.repositories.PublisherRepository;
@@ -10,7 +11,13 @@ import com.altis.library.books.models.entities.Book;
 import com.altis.library.books.models.enums.BookStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+
+import com.altis.library.books.repositories.BookSpecification;
 
 @Service
 public class BookService {
@@ -34,7 +41,8 @@ public class BookService {
     public BookResponse create(BookRequest request) {
 
         Publisher publisher = publisherRepository.findById(request.getPublisherId())
-                .orElseThrow(() -> new RuntimeException("Publisher not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Editora não encontrada."));
 
         Book book = bookMapper.toEntity(request, publisher);
 
@@ -44,20 +52,52 @@ public class BookService {
     }
 
     //getAll
-    public List<BookResponse> getAll() {
+    public Page<BookResponse> getAll(
+            String search,
+            int page,
+            int size,
+            String sortBy,
+            String sortDirection) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                resolveSort(sortBy, sortDirection)
+        );
 
-        List<Book> books = bookRepository.findAll();
+        Specification<Book> bookSpecification =
+                BookSpecification.searchSpecification(search);
 
-        return books.stream()
-                .map(bookMapper::toResponse)
-                .toList();
+        return bookRepository.findAll(bookSpecification, pageable)
+                .map(bookMapper::toResponse);
+    }
+
+    private Sort resolveSort(String sortBy, String sortDirection) {
+        String property = switch (sortBy == null ? "" : sortBy.trim()) {
+            case "id", "title", "author", "quantity", "status" ->
+                    sortBy.trim();
+            default -> throw new IllegalArgumentException(
+                    "Campo de ordenação inválido."
+            );
+        };
+
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.valueOf(sortDirection.trim().toUpperCase());
+        } catch (Exception exception) {
+            throw new IllegalArgumentException(
+                    "A direção da ordenação deve ser ASC ou DESC."
+            );
+        }
+
+        return Sort.by(direction, property);
     }
 
     //get pelo id
     public BookResponse getById(Long id) {
 
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Livro não encontrado."));
 
         return bookMapper.toResponse(book);
     }
@@ -66,10 +106,12 @@ public class BookService {
     public BookResponse update(Long id, BookRequest request) {
 
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Livro não encontrado."));
 
         Publisher publisher = publisherRepository.findById(request.getPublisherId())
-                .orElseThrow(() -> new RuntimeException("Publisher not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Editora não encontrada."));
 
         Book mappedBook = bookMapper.toEntity(request, publisher);
 
@@ -88,7 +130,8 @@ public class BookService {
     public void delete(Long id) {
 
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Livro não encontrado."));
 
         bookRepository.delete(book);
     }

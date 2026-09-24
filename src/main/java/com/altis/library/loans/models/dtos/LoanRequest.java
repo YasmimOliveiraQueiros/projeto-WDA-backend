@@ -10,16 +10,16 @@ import java.time.LocalDate;
 @Setter
 public class LoanRequest {
 
-    @NotNull(message = "User ID is required")
+    @NotNull(message = "Usuário é obrigatório.")
     private Long userId;
 
-    @NotNull(message = "Book ID is required")
+    @NotNull(message = "Livro é obrigatório.")
     private Long bookId;
 
-    @NotNull(message = "Loan date is required")
+    @NotNull(message = "A data do empréstimo é obrigatória.")
     private LocalDate loanDate;
 
-    @NotNull(message = "Return date is required")
+    @NotNull(message = "A data de devolução é obrigatória.")
     private LocalDate returnDate;
 
     private String observations;

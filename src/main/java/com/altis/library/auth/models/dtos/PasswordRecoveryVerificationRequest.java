@@ -9,10 +9,10 @@ import lombok.Setter;
 @Setter
 public class PasswordRecoveryVerificationRequest {
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "E-mail é obrigatório.")
+    @Email(message = "E-mail inválido.")
     private String email;
 
-    @NotBlank(message = "CPF is required")
+    @NotBlank(message = "CPF é obrigatório.")
     private String cpf;
 }

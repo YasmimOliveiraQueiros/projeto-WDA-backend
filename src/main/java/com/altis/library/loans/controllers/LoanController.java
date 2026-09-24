@@ -4,11 +4,11 @@ import com.altis.library.loans.models.dtos.LoanRequest;
 import com.altis.library.loans.models.dtos.LoanResponse;
 import com.altis.library.loans.services.LoanService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/loans")
@@ -22,14 +22,33 @@ public class LoanController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LoanResponse>> getAll(
-            @RequestParam(required = false) String name) {
-        return ResponseEntity.ok(loanService.getAll(name));
+    public ResponseEntity<Page<LoanResponse>> getAll(
+            @RequestParam(required = false) String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+        return ResponseEntity.ok(loanService.getAll(
+                name,
+                page,
+                size,
+                sortBy,
+                sortDirection
+        ));
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<LoanResponse>> getMyLoans() {
-        return ResponseEntity.ok(loanService.getMyLoans());
+    public ResponseEntity<Page<LoanResponse>> getMyLoans(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+        return ResponseEntity.ok(loanService.getMyLoans(
+                page,
+                size,
+                sortBy,
+                sortDirection
+        ));
     }
 
     @GetMapping("/{id}")
@@ -41,7 +60,8 @@ public class LoanController {
     public ResponseEntity<LoanResponse> create(
             @Valid @RequestBody LoanRequest request) {
 
-        return ResponseEntity.ok(loanService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(loanService.create(request));
     }
 
     @PutMapping("/{id}")

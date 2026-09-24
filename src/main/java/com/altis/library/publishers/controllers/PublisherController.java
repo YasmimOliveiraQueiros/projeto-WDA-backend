@@ -5,10 +5,11 @@ import com.altis.library.publishers.models.dtos.PublisherResponse;
 import com.altis.library.publishers.services.PublisherService;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/publishers")
@@ -22,8 +23,19 @@ public class PublisherController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PublisherResponse>> findAll() {
-        return ResponseEntity.ok(publisherService.findAll());
+    public ResponseEntity<Page<PublisherResponse>> findAll(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+        return ResponseEntity.ok(publisherService.findAll(
+                search,
+                page,
+                size,
+                sortBy,
+                sortDirection
+        ));
     }
 
     @GetMapping("/{id}")
@@ -35,7 +47,8 @@ public class PublisherController {
     public ResponseEntity<PublisherResponse> save(
             @Valid @RequestBody PublisherRequest request) {
 
-        return ResponseEntity.ok(publisherService.save(request));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(publisherService.save(request));
     }
 
     @PutMapping("/{id}")

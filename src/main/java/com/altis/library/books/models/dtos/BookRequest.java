@@ -10,17 +10,17 @@ import lombok.Setter;
 @Setter
 public class BookRequest {
 
-    @NotBlank(message = "Book title is required")
+    @NotBlank(message = "Título é obrigatório.")
     private String title;
 
-    @NotBlank(message = "Book author is required")
+    @NotBlank(message = "Autor é obrigatório.")
     private String author;
 
-    @NotNull(message = "Publisher ID is required")
+    @NotNull(message = "Editora é obrigatória.")
     private Long publisherId;
 
-    @NotNull(message = "Book quantity is required")
-    @Min(value = 1, message = "Book quantity must be at least 1")
+    @NotNull(message = "Quantidade é obrigatória.")
+    @Min(value = 1, message = "A quantidade deve ser maior ou igual a 1.")
     private Integer quantity;
 
     private String observations;

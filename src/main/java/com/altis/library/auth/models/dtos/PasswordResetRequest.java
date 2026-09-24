@@ -9,16 +9,16 @@ import lombok.Setter;
 @Setter
 public class PasswordResetRequest {
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "E-mail é obrigatório.")
+    @Email(message = "E-mail inválido.")
     private String email;
 
-    @NotBlank(message = "CPF is required")
+    @NotBlank(message = "CPF é obrigatório.")
     private String cpf;
 
-    @NotBlank(message = "New password is required")
+    @NotBlank(message = "Nova senha é obrigatória.")
     private String newPassword;
 
-    @NotBlank(message = "Password confirmation is required")
+    @NotBlank(message = "Confirmação de senha é obrigatória.")
     private String confirmPassword;
 }

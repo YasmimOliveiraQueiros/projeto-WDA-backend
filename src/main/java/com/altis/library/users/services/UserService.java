@@ -1,16 +1,22 @@
 package com.altis.library.users.services;
 
+import com.altis.library.exceptions.ConflictException;
+import com.altis.library.exceptions.ResourceNotFoundException;
 import com.altis.library.mappers.UserMapper;
 import com.altis.library.users.models.entities.User;
 import com.altis.library.users.repositories.UserRepository;
-import org.springframework.expression.ExpressionException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.altis.library.users.models.dtos.UserRequest;
 import com.altis.library.users.models.dtos.UserResponse;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
+import com.altis.library.users.repositories.UserSpecification;
 
 @Service
 public class UserService {
@@ -31,11 +37,11 @@ public class UserService {
     public UserResponse saveUser(UserRequest userRequest) {
 
         if (userRepository.existsByEmail(userRequest.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            throw new ConflictException("O e-mail informado já está cadastrado.");
         }
 
         if (userRepository.existsByCpf(userRequest.getCpf())) {
-            throw new RuntimeException("CPF already registered");
+            throw new ConflictException("O CPF informado já está cadastrado.");
         }
 
         User user = userMapper.toEntity(userRequest);
@@ -46,19 +52,51 @@ public class UserService {
         return userMapper.toResponse(savedUser);
     }
 
-    public List<UserResponse> getAllUsers() {
+    public Page<UserResponse> getAllUsers(
+            String search,
+            int page,
+            int size,
+            String sortBy,
+            String sortDirection) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                resolveSort(sortBy, sortDirection)
+        );
 
-        List<User> users = userRepository.findByIsAdminFalse();
+        Specification<User> userSpecification =
+                UserSpecification.searchSpecification(search);
 
-        return users.stream()
-                .map(userMapper::toResponse)
-                .toList();
+        return userRepository.findAll(userSpecification, pageable)
+                .map(userMapper::toResponse);
+    }
+
+    private Sort resolveSort(String sortBy, String sortDirection) {
+        String property = switch (sortBy == null ? "" : sortBy.trim()) {
+            case "id", "name", "email", "birthDate", "createdAt", "active" ->
+                    sortBy.trim();
+            default -> throw new IllegalArgumentException(
+                    "Campo de ordenação inválido."
+            );
+        };
+
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.valueOf(sortDirection.trim().toUpperCase());
+        } catch (Exception exception) {
+            throw new IllegalArgumentException(
+                    "A direção da ordenação deve ser ASC ou DESC."
+            );
+        }
+
+        return Sort.by(direction, property);
     }
 
     public UserResponse getUserById(Long id) {
 
         User user = userRepository.findByIdAndIsAdminFalse(id)
-                .orElseThrow(() -> new ExpressionException("Usuário não encontrado"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Usuário não encontrado."));
 
         return userMapper.toResponse(user);
     }
@@ -66,14 +104,15 @@ public class UserService {
     public UserResponse updateUser(Long id, UserRequest userRequest) {
 
         User existingUser = userRepository.findByIdAndIsAdminFalse(id)
-                .orElseThrow(() -> new ExpressionException("Usuário não encontrado"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Usuário não encontrado."));
 
         if (userRepository.existsByEmailAndIdNot(userRequest.getEmail(), id)) {
-            throw new RuntimeException("Email already registered");
+            throw new ConflictException("O e-mail informado já está cadastrado.");
         }
 
         if (userRepository.existsByCpfAndIdNot(userRequest.getCpf(), id)) {
-            throw new RuntimeException("CPF already registered");
+            throw new ConflictException("O CPF informado já está cadastrado.");
         }
 
         User mappedUser = userMapper.toEntity(userRequest);
@@ -90,11 +129,16 @@ public class UserService {
         return userMapper.toResponse(updatedUser);
     }
 
-    public void deleteUser(Long id) {
+    public UserResponse updateStatus(Long id, boolean active) {
 
         User user = userRepository.findByIdAndIsAdminFalse(id)
-                .orElseThrow(() -> new ExpressionException("Usuário não encontrado"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Usuário não encontrado."));
 
-        userRepository.delete(user);
+        user.setActive(active);
+
+        User updatedUser = userRepository.save(user);
+
+        return userMapper.toResponse(updatedUser);
     }
 }

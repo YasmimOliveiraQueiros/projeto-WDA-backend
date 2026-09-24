@@ -9,19 +9,19 @@ import lombok.Setter;
 @Setter
 public class PublisherRequest {
 
-    @NotBlank(message = "Publisher name is required")
+    @NotBlank(message = "Nome é obrigatório.")
     private String name;
 
-    @NotBlank(message = "Publisher email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "E-mail é obrigatório.")
+    @Email(message = "E-mail inválido.")
     private String email;
 
-    @NotBlank(message = "CNPJ is required")
+    @NotBlank(message = "CNPJ é obrigatório.")
     private String cnpj;
 
-    @NotBlank(message = "City is required")
+    @NotBlank(message = "Cidade é obrigatória.")
     private String city;
 
-    @NotBlank(message = "State is required")
+    @NotBlank(message = "Estado é obrigatório.")
     private String state;
 }
