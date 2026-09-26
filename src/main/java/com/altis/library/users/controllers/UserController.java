@@ -20,10 +20,10 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = "bearerAuth") // funciona como chave de acesso com as permissões de quem carrega
 public class UserController {
 
-    private final UserService userService;
+    private final UserService userService; // declara uma variável chamada userService que será usada para acessar os métodos da classe UserService.
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -40,7 +40,7 @@ public class UserController {
     // get all
     @GetMapping
     public ResponseEntity<Page<UserResponse>> getAllUsers(
-            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String search, // pega as informações dos parâmetros
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,

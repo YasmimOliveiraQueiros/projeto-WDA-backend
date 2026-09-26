@@ -17,12 +17,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+// é a classe que configura a segurança da API: JWT, autenticação, permissões por rota e respostas de erro
 @Configuration
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter; // guarda o filtro que verifica o JWT das requisições
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) { // injeta o filtro pelo construtor
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
@@ -51,15 +52,15 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // faz o filtro JWT ser executado antes do filtro padrão de autenticação do Spring
                 .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint((request, response, exception) ->
+                        .authenticationEntryPoint((request, response, exception) -> // Define o que acontece quando alguém tenta acessar uma rota protegida sem autenticação válida
                                 writeSecurityError(
                                         response,
                                         objectMapper,
                                         HttpServletResponse.SC_UNAUTHORIZED,
                                         "Unauthorized",
-                                        "Token de autenticação inválido ou expirado.",
+                                        "Token de autenticação inválido ou expirado.", // 401
                                         request.getRequestURI()
                                 ))
                         .accessDeniedHandler((request, response, exception) ->
@@ -68,7 +69,7 @@ public class SecurityConfig {
                                         objectMapper,
                                         HttpServletResponse.SC_FORBIDDEN,
                                         "Forbidden",
-                                        "Acesso negado.",
+                                        "Acesso negado.", // 403
                                         request.getRequestURI()
                                 )))
                 .authorizeHttpRequests(auth -> auth
@@ -91,7 +92,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    private void writeSecurityError(
+    private void writeSecurityError( //esse método evita repetir código para os erros
             HttpServletResponse response,
             ObjectMapper objectMapper,
             int status,

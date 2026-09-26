@@ -53,10 +53,16 @@ public class AuthService {
     }
 
     public void verifyPasswordRecovery(PasswordRecoveryVerificationRequest request) {
-        userRepository.findByEmailAndCpf(request.getEmail(), request.getCpf())
+        User user = userRepository.findByEmailAndCpf(request.getEmail(), request.getCpf())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Não foi possível validar os dados de recuperação."
                 ));
+
+        if (user.isAdmin()) {
+            throw new IllegalArgumentException(
+                    "Não é permitido alterar a senha do administrador por este fluxo."
+            );
+        }
     }
 
     public void resetPassword(PasswordResetRequest request) {
@@ -64,6 +70,12 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Não foi possível validar os dados de recuperação."
                 ));
+
+        if (user.isAdmin()) {
+            throw new IllegalArgumentException(
+                    "Não é permitido alterar a senha do administrador por este fluxo."
+            );
+        }
 
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new IllegalArgumentException("As senhas não coincidem.");

@@ -10,13 +10,13 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long>,
         JpaSpecificationExecutor<User> {
 
-    boolean existsByIsAdminTrue();
+    boolean existsByIsAdminTrue(); // verifica se existe algum admin
     boolean existsByEmail(String email);
     boolean existsByCpf(String cpf);
     boolean existsByEmailAndIdNot(String email, Long id);
     boolean existsByCpfAndIdNot(String cpf, Long id);
 
-    User findByEmail(String email);
+    User findByEmail(String email); // busca um usuário pelo email
     User findByCpf(String cpf);
     Optional<User> findByEmailAndCpf(String email, String cpf);
     long countByIsAdminFalse();

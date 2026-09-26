@@ -29,7 +29,7 @@ public class UserService {
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             UserMapper userMapper) {
-        this.userRepository = userRepository;
+        this.userRepository = userRepository; // injeção de dependência por construtor, para poder usar dentro da classe
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
     }
@@ -52,7 +52,7 @@ public class UserService {
         return userMapper.toResponse(savedUser);
     }
 
-    public Page<UserResponse> getAllUsers(
+    public Page<UserResponse> getAllUsers( // paginação
             String search,
             int page,
             int size,
@@ -117,7 +117,7 @@ public class UserService {
 
         User mappedUser = userMapper.toEntity(userRequest);
 
-        existingUser.setName(mappedUser.getName());
+        existingUser.setName(mappedUser.getName()); // pega o nome novo e coloca no usuário que já existe
         existingUser.setEmail(mappedUser.getEmail());
         existingUser.setPhone(mappedUser.getPhone());
         existingUser.setCpf(mappedUser.getCpf());
