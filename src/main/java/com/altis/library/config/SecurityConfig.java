@@ -11,8 +11,14 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -51,6 +57,7 @@ public class SecurityConfig {
             ObjectMapper objectMapper) throws Exception {
 
         http
+                .cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // faz o filtro JWT ser executado antes do filtro padrão de autenticação do Spring
                 .exceptionHandling(exceptionHandling -> exceptionHandling
@@ -80,6 +87,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**")
                         .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users").permitAll()
                         .requestMatchers("/users/**").hasRole("ADMIN")
                         .requestMatchers("/books/**").hasRole("ADMIN")
                         .requestMatchers("/publishers/**").hasRole("ADMIN")
@@ -92,7 +100,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    private void writeSecurityError( //esse método evita repetir código para os erros
+    private void writeSecurityError( //esse metodo evita repetir os erros
             HttpServletResponse response,
             ObjectMapper objectMapper,
             int status,
@@ -112,5 +120,29 @@ public class SecurityConfig {
         );
 
         objectMapper.writeValue(response.getWriter(), errorResponse);
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() { //metodo de configuracao entre front e backend
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(
+                List.of("http://localhost:9000")
+        );
+
+        configuration.setAllowedMethods(
+                List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+        );
+
+        configuration.setAllowedHeaders(
+                List.of("Authorization", "Content-Type")
+        );
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 }
