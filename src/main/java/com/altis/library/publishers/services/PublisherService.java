@@ -8,6 +8,7 @@ import com.altis.library.publishers.models.dtos.PublisherRequest;
 import com.altis.library.publishers.models.dtos.PublisherResponse;
 import com.altis.library.publishers.repositories.PublisherRepository;
 import com.altis.library.books.repositories.BookRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,9 @@ import com.altis.library.publishers.repositories.PublisherSpecification;
 
 @Service
 public class PublisherService {
+
+    private static final String PUBLISHER_HAS_BOOKS_MESSAGE =
+            "A editora não pode ser excluída porque possui livros vinculados.";
 
     private final PublisherRepository publisherRepository;
     private final BookRepository bookRepository;
@@ -140,7 +144,16 @@ public class PublisherService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Editora não encontrada."
                 ));
-        publisherRepository.deleteById(id);
+
+        if (bookRepository.countByPublisherId(id) > 0) {
+            throw new ConflictException(PUBLISHER_HAS_BOOKS_MESSAGE);
+        }
+
+        try {
+            publisherRepository.deleteById(id);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ConflictException(PUBLISHER_HAS_BOOKS_MESSAGE);
+        }
     }
 
     private PublisherResponse convertToResponse(Publisher publisher) {
