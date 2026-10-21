@@ -1,7 +1,9 @@
 package com.altis.library.books.services;
 
 import com.altis.library.exceptions.ResourceNotFoundException;
+import com.altis.library.exceptions.ConflictException;
 import com.altis.library.mappers.BookMapper;
+import com.altis.library.loans.repositories.LoanRepository;
 import com.altis.library.publishers.models.entities.Publisher;
 import com.altis.library.publishers.repositories.PublisherRepository;
 import com.altis.library.books.repositories.BookRepository;
@@ -24,15 +26,18 @@ public class BookService {
 
     //consulta a editora pelo id
     private final BookRepository bookRepository;
+    private final LoanRepository loanRepository;
     private final PublisherRepository publisherRepository;
     private final BookMapper bookMapper;
 
     public BookService(
             BookRepository bookRepository,
+            LoanRepository loanRepository,
             PublisherRepository publisherRepository,
             BookMapper bookMapper) {
 
         this.bookRepository = bookRepository;
+        this.loanRepository = loanRepository;
         this.publisherRepository = publisherRepository;
         this.bookMapper = bookMapper;
     }
@@ -132,6 +137,12 @@ public class BookService {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Livro não encontrado."));
+
+        if (loanRepository.existsByBook_Id(id)) {
+            throw new ConflictException(
+                    "Não é possível excluir este livro porque existem empréstimos vinculados a ele."
+            );
+        }
 
         bookRepository.delete(book);
     }

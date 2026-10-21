@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 public interface LoanRepository extends JpaRepository<Loan, Long>,
         JpaSpecificationExecutor<Loan> {
 
+    boolean existsByBook_Id(Long bookId);
     long countByUserIdAndStatus(Long userId, LoanStatus status);
     long countByStatus(LoanStatus status);
     List<Loan> findByUserId(Long userId);
