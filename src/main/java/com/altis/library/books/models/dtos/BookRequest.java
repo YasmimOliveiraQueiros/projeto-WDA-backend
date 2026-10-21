@@ -20,7 +20,7 @@ public class BookRequest {
     private Long publisherId;
 
     @NotNull(message = "Quantidade é obrigatória.")
-    @Min(value = 1, message = "A quantidade deve ser maior ou igual a 1.")
+    @Min(value = 0, message = "A quantidade deve ser maior ou igual a 0.")
     private Integer quantity;
 
     private String observations;

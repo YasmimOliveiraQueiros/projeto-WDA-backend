@@ -50,7 +50,7 @@ class BookControllerDeleteTest {
 
     @Test
     void deleteWithAnyLinkedLoanReturnsConflictAndApiErrorFormat() throws Exception {
-        when(bookRepository.findById(BOOK_ID)).thenReturn(Optional.of(book()));
+        when(bookRepository.findByIdForUpdate(BOOK_ID)).thenReturn(Optional.of(book()));
         when(loanRepository.existsByBook_Id(BOOK_ID)).thenReturn(true);
 
         mockMvc.perform(delete("/books/{id}", BOOK_ID))
@@ -66,7 +66,7 @@ class BookControllerDeleteTest {
     @Test
     void deleteWithoutLinkedLoansReturnsNoContent() throws Exception {
         Book book = book();
-        when(bookRepository.findById(BOOK_ID)).thenReturn(Optional.of(book));
+        when(bookRepository.findByIdForUpdate(BOOK_ID)).thenReturn(Optional.of(book));
         when(loanRepository.existsByBook_Id(BOOK_ID)).thenReturn(false);
 
         mockMvc.perform(delete("/books/{id}", BOOK_ID))
@@ -77,7 +77,7 @@ class BookControllerDeleteTest {
 
     @Test
     void deleteOfMissingBookStillReturnsNotFound() throws Exception {
-        when(bookRepository.findById(BOOK_ID)).thenReturn(Optional.empty());
+        when(bookRepository.findByIdForUpdate(BOOK_ID)).thenReturn(Optional.empty());
 
         mockMvc.perform(delete("/books/{id}", BOOK_ID))
                 .andExpect(status().isNotFound())

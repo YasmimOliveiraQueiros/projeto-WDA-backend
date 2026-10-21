@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.transaction.annotation.Transactional;
 import com.altis.library.loans.repositories.LoanSpecification;
 
 @Service
@@ -42,6 +43,7 @@ public class LoanService {
     }
 
     // create
+    @Transactional
     public LoanResponse create(LoanRequest request) {
 
         User user = userRepository.findById(request.getUserId())
@@ -59,7 +61,7 @@ public class LoanService {
             );
         }
 
-        Book book = bookRepository.findById(request.getBookId())
+        Book book = bookRepository.findByIdForUpdate(request.getBookId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Livro não encontrado."));
 
@@ -189,17 +191,21 @@ public class LoanService {
 
 
     // return - registra que o livro alugado pelo usuário foi devolvido
+    @Transactional
     public LoanResponse returnLoan(Long id) {
 
-        Loan loan = loanRepository.findById(id)
+        Loan loan = loanRepository.findByIdForUpdate(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Empréstimo não encontrado."));
 
-        if (loan.getStatus() == LoanStatus.RETURNED) {
+        if (loan.getStatus() == LoanStatus.RETURNED
+                || loan.getStatus() == LoanStatus.RETURNED_LATE) {
             throw new ConflictException("O empréstimo já foi devolvido.");
         }
 
-        Book book = loan.getBook();
+        Book book = bookRepository.findByIdForUpdate(loan.getBook().getId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Livro não encontrado."));
 
         book.setQuantity(book.getQuantity() + 1);
         bookRepository.save(book);
@@ -214,14 +220,18 @@ public class LoanService {
 
 
     // delete
+    @Transactional
     public void delete(Long id) {
 
-        Loan loan = loanRepository.findById(id)
+        Loan loan = loanRepository.findByIdForUpdate(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Empréstimo não encontrado."));
 
-        if (loan.getStatus() == LoanStatus.PENDING) {
-            Book book = loan.getBook();
+        if (loan.getStatus() == LoanStatus.PENDING
+                || loan.getStatus() == LoanStatus.OVERDUE) {
+            Book book = bookRepository.findByIdForUpdate(loan.getBook().getId())
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException("Livro não encontrado."));
 
             book.setQuantity(book.getQuantity() + 1);
             bookRepository.save(book);

@@ -34,8 +34,18 @@ public class Book {
         this.title = title;
         this.author = author;
         this.publisher = publisher;
-        this.quantity = quantity;
+        setQuantity(quantity);
         this.observations = observations;
-        this.status = BookStatus.AVAILABLE;
+    }
+
+    public void setQuantity(Integer quantity) {
+        if (quantity == null || quantity < 0) {
+            throw new IllegalArgumentException(
+                    "A quantidade disponível não pode ser negativa."
+            );
+        }
+
+        this.quantity = quantity;
+        this.status = quantity > 0 ? BookStatus.AVAILABLE : BookStatus.RENTED;
     }
 }

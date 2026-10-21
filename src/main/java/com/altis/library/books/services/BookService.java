@@ -10,7 +10,6 @@ import com.altis.library.books.repositories.BookRepository;
 import com.altis.library.books.models.dtos.BookRequest;
 import com.altis.library.books.models.dtos.BookResponse;
 import com.altis.library.books.models.entities.Book;
-import com.altis.library.books.models.enums.BookStatus;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Page;
@@ -18,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.altis.library.books.repositories.BookSpecification;
 
@@ -108,9 +108,10 @@ public class BookService {
     }
 
     //update
+    @Transactional
     public BookResponse update(Long id, BookRequest request) {
 
-        Book book = bookRepository.findById(id)
+        Book book = bookRepository.findByIdForUpdate(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Livro não encontrado."));
 
@@ -132,9 +133,10 @@ public class BookService {
     }
 
     //delete
+    @Transactional
     public void delete(Long id) {
 
-        Book book = bookRepository.findById(id)
+        Book book = bookRepository.findByIdForUpdate(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Livro não encontrado."));
 
