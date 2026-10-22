@@ -19,6 +19,7 @@ public class LoanMapper {
         response.setId(loan.getId());
         response.setUserId(loan.getUser().getId());
         response.setBookId(loan.getBook().getId());
+        response.setBookTitle(loan.getBook().getTitle());
         response.setLoanDate(loan.getLoanDate());
         response.setReturnDate(loan.getReturnDate());
         response.setReturnedAt(loan.getReturnedAt());

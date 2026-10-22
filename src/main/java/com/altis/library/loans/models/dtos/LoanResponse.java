@@ -14,6 +14,7 @@ public class LoanResponse {
     private Long id;
     private Long userId;
     private Long bookId;
+    private String bookTitle;
     private LocalDate loanDate;
     private LocalDate returnDate;
     private LocalDateTime returnedAt;

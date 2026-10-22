@@ -3,6 +3,7 @@ package com.altis.library.loans.repositories;
 import com.altis.library.loans.models.entities.Loan;
 import com.altis.library.loans.models.enums.LoanStatus;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
@@ -63,6 +64,7 @@ public interface LoanRepository extends JpaRepository<Loan, Long>,
             @Param("today") LocalDate today);
 
     List<Loan> findByUserId(Long userId);
+    @EntityGraph(attributePaths = "book")
     Page<Loan> findByUserId(Long userId, Pageable pageable);
     List<Loan> findByUser_NameContainingIgnoreCase(String name);
     List<Loan> findTop5ByOrderByLoanDateDesc();
