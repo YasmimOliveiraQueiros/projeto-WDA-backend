@@ -22,6 +22,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import com.altis.library.loans.repositories.LoanSpecification;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 public class LoanService {
 
@@ -46,13 +50,13 @@ public class LoanService {
     @Transactional
     public LoanResponse create(LoanRequest request) {
 
-        User user = userRepository.findById(request.getUserId())
+        User user = userRepository.findByIdForUpdate(request.getUserId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Usuário não encontrado."));
 
-        long activeLoans = loanRepository.countByUserIdAndStatus(
+        long activeLoans = loanRepository.countByUserIdAndStatusIn(
                 user.getId(),
-                LoanStatus.PENDING
+                List.of(LoanStatus.PENDING, LoanStatus.OVERDUE)
         );
 
         if (activeLoans >= 5) {
@@ -90,6 +94,7 @@ public class LoanService {
     // getAll
     public Page<LoanResponse> getAll(
             String name,
+            LoanStatus status,
             int page,
             int size,
             String sortBy,
@@ -101,7 +106,7 @@ public class LoanService {
         );
 
         Specification<Loan> loanSpecification =
-                LoanSpecification.searchSpecification(name);
+                LoanSpecification.searchSpecification(name, status, LocalDate.now());
 
         return loanRepository.findAll(loanSpecification, pageable)
                 .map(loanMapper::toResponse);
@@ -162,15 +167,17 @@ public class LoanService {
     }
 
     // update
+    @Transactional
     public LoanResponse update(Long id, LoanRequest request) {
 
-        Loan loan = loanRepository.findById(id)
+        Loan loan = loanRepository.findByIdForUpdate(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Empréstimo não encontrado."));
 
-        if (loan.getStatus() == LoanStatus.RETURNED) {
+        if (!loan.getUser().getId().equals(request.getUserId())
+                || !loan.getBook().getId().equals(request.getBookId())) {
             throw new ConflictException(
-                    "Empréstimos devolvidos não podem ser alterados."
+                    "Não é permitido alterar o usuário ou o livro do empréstimo."
             );
         }
 
@@ -183,6 +190,12 @@ public class LoanService {
         loan.setLoanDate(request.getLoanDate());
         loan.setReturnDate(request.getReturnDate());
         loan.setObservations(request.getObservations());
+
+        if (isReturned(loan.getStatus())) {
+            loan.setStatus(loan.getReturnedAt().toLocalDate().isAfter(loan.getReturnDate())
+                    ? LoanStatus.RETURNED_LATE
+                    : LoanStatus.RETURNED);
+        }
 
         Loan updatedLoan = loanRepository.save(loan);
 
@@ -198,8 +211,7 @@ public class LoanService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Empréstimo não encontrado."));
 
-        if (loan.getStatus() == LoanStatus.RETURNED
-                || loan.getStatus() == LoanStatus.RETURNED_LATE) {
+        if (isReturned(loan.getStatus())) {
             throw new ConflictException("O empréstimo já foi devolvido.");
         }
 
@@ -210,34 +222,19 @@ public class LoanService {
         book.setQuantity(book.getQuantity() + 1);
         bookRepository.save(book);
 
-        loan.setStatus(LoanStatus.RETURNED);
-        loan.setReturnedAt(java.time.LocalDateTime.now());
+        LocalDateTime returnedAt = LocalDateTime.now();
+        loan.setStatus(returnedAt.toLocalDate().isAfter(loan.getReturnDate())
+                ? LoanStatus.RETURNED_LATE
+                : LoanStatus.RETURNED);
+        loan.setReturnedAt(returnedAt);
 
         Loan returnedLoan = loanRepository.save(loan);
 
         return loanMapper.toResponse(returnedLoan);
     }
 
-
-    // delete
-    @Transactional
-    public void delete(Long id) {
-
-        Loan loan = loanRepository.findByIdForUpdate(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Empréstimo não encontrado."));
-
-        if (loan.getStatus() == LoanStatus.PENDING
-                || loan.getStatus() == LoanStatus.OVERDUE) {
-            Book book = bookRepository.findByIdForUpdate(loan.getBook().getId())
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException("Livro não encontrado."));
-
-            book.setQuantity(book.getQuantity() + 1);
-            bookRepository.save(book);
-        }
-
-        loanRepository.delete(loan);
+    private boolean isReturned(LoanStatus status) {
+        return status == LoanStatus.RETURNED || status == LoanStatus.RETURNED_LATE;
     }
 
 }

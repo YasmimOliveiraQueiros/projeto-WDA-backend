@@ -18,4 +18,12 @@ public class DashboardResponse {
     private long returnedLoans;
     private long pendingLoans;
     private List<LoanResponse> latestLoans;
+    private List<LoansByMonth> loansByMonth;
+    private BooksByStatus booksByStatus;
+
+    public record LoansByMonth(int year, int month, long quantity) {
+    }
+
+    public record BooksByStatus(long available, long rented) {
+    }
 }

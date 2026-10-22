@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import com.altis.library.loans.models.enums.LoanStatus;
 
 @RestController
 @RequestMapping("/loans")
@@ -24,12 +25,14 @@ public class LoanController {
     @GetMapping
     public ResponseEntity<Page<LoanResponse>> getAll(
             @RequestParam(required = false) String name,
+            @RequestParam(required = false) LoanStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDirection) {
         return ResponseEntity.ok(loanService.getAll(
                 name,
+                status,
                 page,
                 size,
                 sortBy,
@@ -76,11 +79,5 @@ public class LoanController {
     @PatchMapping("/{id}/return")
     public ResponseEntity<LoanResponse> returnLoan(@PathVariable Long id) {
         return ResponseEntity.ok(loanService.returnLoan(id));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        loanService.delete(id);
-        return ResponseEntity.noContent().build();
     }
 }

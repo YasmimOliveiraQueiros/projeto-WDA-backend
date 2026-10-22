@@ -4,8 +4,11 @@ import com.altis.library.books.models.entities.Book;
 import com.altis.library.loans.models.dtos.LoanRequest;
 import com.altis.library.loans.models.dtos.LoanResponse;
 import com.altis.library.loans.models.entities.Loan;
+import com.altis.library.loans.models.enums.LoanStatus;
 import com.altis.library.users.models.entities.User;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
 
 @Component
 public class LoanMapper {
@@ -19,7 +22,13 @@ public class LoanMapper {
         response.setLoanDate(loan.getLoanDate());
         response.setReturnDate(loan.getReturnDate());
         response.setReturnedAt(loan.getReturnedAt());
-        response.setStatus(loan.getStatus());
+        LoanStatus status = loan.getStatus();
+        if (status == LoanStatus.PENDING || status == LoanStatus.OVERDUE) {
+            status = loan.getReturnDate().isBefore(LocalDate.now())
+                    ? LoanStatus.OVERDUE
+                    : LoanStatus.PENDING;
+        }
+        response.setStatus(status);
         response.setObservations(loan.getObservations());
 
         return response;
