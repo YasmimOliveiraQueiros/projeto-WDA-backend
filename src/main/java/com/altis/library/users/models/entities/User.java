@@ -25,6 +25,7 @@ public class User {
     private String address;
     private boolean isAdmin;
     private boolean active;
+    private long tokenVersion;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

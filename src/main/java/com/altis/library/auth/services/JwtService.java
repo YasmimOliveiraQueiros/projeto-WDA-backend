@@ -23,12 +23,18 @@ public class JwtService {
         this.secretKey = secretKey;
     }
 
-    public String generateToken(String email, boolean isAdmin) throws JOSEException {
+    public String generateToken(
+            String email,
+            boolean isAdmin,
+            Long userId,
+            long tokenVersion) throws JOSEException {
         Instant issuedAt = Instant.now();
 
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .subject(email)
                 .claim("role", isAdmin ? "ADMIN" : "USER")
+                .claim("userId", userId)
+                .claim("tokenVersion", tokenVersion)
                 .issueTime(Date.from(issuedAt))
                 .expirationTime(Date.from(issuedAt.plusSeconds(3600)))
                 .build();
@@ -97,6 +103,52 @@ public class JwtService {
 
             String role = claims.getStringClaim("role");
             return "ADMIN".equals(role) || "USER".equals(role) ? role : null;
+        } catch (JOSEException | ParseException exception) {
+            return null;
+        }
+    }
+
+    public Long getUserId(String token) {
+        if (token == null) {
+            return null;
+        }
+
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            if (!JWSAlgorithm.HS256.equals(signedJWT.getHeader().getAlgorithm())
+                    || !signedJWT.verify(new MACVerifier(secretKey.getEncoded()))) {
+                return null;
+            }
+
+            JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
+            Date expirationTime = claims.getExpirationTime();
+            if (expirationTime == null || !expirationTime.after(new Date())) {
+                return null;
+            }
+            return claims.getLongClaim("userId");
+        } catch (JOSEException | ParseException exception) {
+            return null;
+        }
+    }
+
+    public Long getTokenVersion(String token) {
+        if (token == null) {
+            return null;
+        }
+
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            if (!JWSAlgorithm.HS256.equals(signedJWT.getHeader().getAlgorithm())
+                    || !signedJWT.verify(new MACVerifier(secretKey.getEncoded()))) {
+                return null;
+            }
+
+            JWTClaimsSet claims = signedJWT.getJWTClaimsSet();
+            Date expirationTime = claims.getExpirationTime();
+            if (expirationTime == null || !expirationTime.after(new Date())) {
+                return null;
+            }
+            return claims.getLongClaim("tokenVersion");
         } catch (JOSEException | ParseException exception) {
             return null;
         }

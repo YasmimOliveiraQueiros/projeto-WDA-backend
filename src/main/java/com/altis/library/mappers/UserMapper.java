@@ -18,7 +18,7 @@ public class UserMapper {
         response.setCpf(user.getCpf());
         response.setBirthDate(user.getBirthDate());
         response.setAddress(user.getAddress());
-        response.setAdmin(user.isAdmin());
+        response.setIsAdmin(user.isAdmin());
         response.setActive(user.isActive());
         response.setCreatedAt(user.getCreatedAt());
         response.setUpdatedAt(user.getUpdatedAt());

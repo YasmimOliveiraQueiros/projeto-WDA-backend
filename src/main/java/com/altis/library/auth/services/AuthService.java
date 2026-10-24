@@ -44,7 +44,12 @@ public class AuthService {
         try {
             String role = user.isAdmin() ? "ADMIN" : "USER";
             return new LoginResponse(
-                    jwtService.generateToken(user.getEmail(), user.isAdmin()),
+                    jwtService.generateToken(
+                            user.getEmail(),
+                            user.isAdmin(),
+                            user.getId(),
+                            user.getTokenVersion()
+                    ),
                     role
             );
         } catch (JOSEException exception) {
@@ -82,6 +87,7 @@ public class AuthService {
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setTokenVersion(user.getTokenVersion() + 1);
         userRepository.save(user);
     }
 }

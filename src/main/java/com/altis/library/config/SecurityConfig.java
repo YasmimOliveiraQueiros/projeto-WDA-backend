@@ -2,6 +2,7 @@ package com.altis.library.config;
 
 import com.altis.library.auth.filters.JwtAuthenticationFilter;
 import com.altis.library.auth.services.JwtService;
+import com.altis.library.users.repositories.UserRepository;
 import com.altis.library.exceptions.ApiErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -34,8 +35,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public static JwtAuthenticationFilter jwtAuthenticationFilter(JwtService jwtService) {
-        return new JwtAuthenticationFilter(jwtService);
+    public static JwtAuthenticationFilter jwtAuthenticationFilter(
+            JwtService jwtService,
+            UserRepository userRepository) {
+        return new JwtAuthenticationFilter(jwtService, userRepository);
     }
 
     @Bean
@@ -88,6 +91,10 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/me").hasRole("USER")
+                        .requestMatchers(HttpMethod.PATCH, "/users/me").hasRole("USER")
+                        .requestMatchers(HttpMethod.PATCH, "/users/me/password").hasRole("USER")
+                        .requestMatchers(HttpMethod.DELETE, "/users/me").hasRole("USER")
                         .requestMatchers("/users/**").hasRole("ADMIN")
                         .requestMatchers("/books/**").hasRole("ADMIN")
                         .requestMatchers("/publishers/**").hasRole("ADMIN")

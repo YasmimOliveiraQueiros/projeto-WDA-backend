@@ -15,8 +15,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.altis.library.users.models.dtos.PasswordChangeRequest;
+import com.altis.library.users.models.dtos.UserProfileUpdateRequest;
 
 @RestController
 @RequestMapping("/users")
@@ -27,6 +31,33 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getMyProfile(
+            @AuthenticationPrincipal String email) {
+        return ResponseEntity.ok(userService.getMyProfile(email));
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<UserResponse> updateMyProfile(
+            @AuthenticationPrincipal String email,
+            @Valid @RequestBody UserProfileUpdateRequest request) {
+        return ResponseEntity.ok(userService.updateMyProfile(email, request));
+    }
+
+    @PatchMapping("/me/password")
+    public ResponseEntity<Void> changeMyPassword(
+            @AuthenticationPrincipal String email,
+            @Valid @RequestBody PasswordChangeRequest request) {
+        userService.changeMyPassword(email, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> closeMyAccount(@AuthenticationPrincipal String email) {
+        userService.closeMyAccount(email);
+        return ResponseEntity.noContent().build();
     }
 
     // create

@@ -1,5 +1,6 @@
 package com.altis.library.users.models.dtos;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,7 +18,8 @@ public class UserResponse {
     private String cpf;
     private LocalDate birthDate;
     private String address;
-    private boolean isAdmin;
+    @JsonProperty("isAdmin")
+    private Boolean isAdmin;
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

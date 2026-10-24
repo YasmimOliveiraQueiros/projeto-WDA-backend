@@ -54,6 +54,12 @@ public class LoanService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Usuário não encontrado."));
 
+        if (!user.isActive()) {
+            throw new ConflictException(
+                    "Não é possível criar empréstimos para uma conta inativa."
+            );
+        }
+
         long activeLoans = loanRepository.countByUserIdAndStatusIn(
                 user.getId(),
                 List.of(LoanStatus.PENDING, LoanStatus.OVERDUE)
